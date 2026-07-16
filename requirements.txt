@@ -1,0 +1,16 @@
+# Data processing
+pandas>=2.0.0
+
+# Configuration & Environments
+python-dotenv>=1.0.0
+pyyaml>=6.0
+
+# Data Quality
+great-expectations>=0.18.0
+
+# BigQuery Integration
+google-cloud-bigquery>=3.10.0
+db-dtypes>=1.1.0
+
+# Testing
+pytest>=7.0.0

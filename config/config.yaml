@@ -1,0 +1,14 @@
+# Pipeline General Configuration
+pipeline:
+  name: loan_risk_pipeline
+  version: 1.0.0
+
+# Ingestion settings
+ingestion:
+  raw_file_name: "credit_risk_dataset.csv"
+  chunk_size: 10000
+
+# Cleaning parameters
+cleaning:
+  max_dti: 100.0
+  min_income: 0.0

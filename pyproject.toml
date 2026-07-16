@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "loan_risk_pipeline"
+version = "0.1.0"
+description = "An end-to-end Credit and Loan Risk Data Pipeline using Airflow, Great Expectations, and BigQuery."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "Student Developer" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+pythonpath = ["."]

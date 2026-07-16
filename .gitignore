@@ -1,0 +1,31 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# Python caching
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE configurations
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files and Secrets
+.env
+*.json
+!credentials.json.example
+
+# Local Data files (do not commit large CSVs or validated datasets)
+data/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Great Expectations generated docs and configs that are user-specific (we will configure GE specifically later)
+uncommitted/
