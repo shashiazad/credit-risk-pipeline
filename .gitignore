@@ -29,3 +29,7 @@ Thumbs.db
 
 # Great Expectations generated docs and configs that are user-specific (we will configure GE specifically later)
 uncommitted/
+
+# Airflow metadata database and logs
+airflow/
+logs/

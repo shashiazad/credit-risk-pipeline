@@ -78,7 +78,7 @@ class BigQueryTransformer:
             "risk_metrics": risk_metrics
         }
 
-    def deploy_warehouse(self, clean_df: pd.DataFrame) -> bool:
+    def deploy_warehouse(self, clean_df: pd.DataFrame, write_disposition: str = "WRITE_APPEND") -> bool:
         """
         Splits clean data, loads to BigQuery (Fact/Dim), and deploys analytics views.
         """
@@ -86,8 +86,8 @@ class BigQueryTransformer:
         
         # 1. Load Fact & Dimension Tables
         logger.info("Deploying Star Schema tables to Warehouse Layer...")
-        fact_success = self.loader.load_dataframe(fact_loans, table_name="fact_loans")
-        dim_success = self.loader.load_dataframe(dim_borrowers, table_name="dim_borrowers")
+        fact_success = self.loader.load_dataframe(fact_loans, table_name="fact_loans", write_disposition=write_disposition)
+        dim_success = self.loader.load_dataframe(dim_borrowers, table_name="dim_borrowers", write_disposition=write_disposition)
         
         if not (fact_success and dim_success):
             logger.error("Failed to load Star Schema tables into BigQuery.")

@@ -95,7 +95,7 @@ fluent_datasources:
     assets:
       raw_loans_asset:
         type: dataframe
-        id: d2ff78b2-1d6a-4964-9452-853973c14c01
+        id: bc9b1379-6b23-4c30-b133-b17ff069c8cd
         batch_metadata: {}
 analytics_enabled:
 data_context_id: b8c8e060-4652-49c7-ae10-6a40397ebbf4

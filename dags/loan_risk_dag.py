@@ -3,7 +3,7 @@ import sys
 from datetime import datetime, timedelta
 
 # Add project root to path so we can import src modules inside Airflow
-PROJECT_ROOT = "/Users/shashi/Projects/Personal/Loan_Risk_Pipeline"
+PROJECT_ROOT = os.getenv("PROJECT_ROOT", "/Users/shashi/Projects/Personal/Loan_Risk_Pipeline")
 if PROJECT_ROOT not in sys.path:
     sys.path.append(PROJECT_ROOT)
 
@@ -42,7 +42,7 @@ default_args = {
     dag_id="loan_risk_pipeline",
     default_args=default_args,
     description="Orchestrates ingestion and analysis of credit risk data.",
-    schedule_interval=None,  # Manual triggers for now
+    schedule_interval="*/2 * * * *",  # Run every 2 minutes
     start_date=datetime(2025, 1, 1),
     catchup=False,
     tags=["credit_risk", "elt"],
@@ -68,7 +68,9 @@ def loan_risk_dag():
         if df is None or df.empty:
             raise ValueError("Ingestion returned empty or invalid DataFrame.")
             
-        return ingester.source_path
+        staging_path = os.path.join(PROJECT_ROOT, "data/raw/staging_raw_loans.csv")
+        df.to_csv(staging_path, index=False)
+        return staging_path
 
     @task()
     def validate_raw_data(filepath: str) -> bool:

@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline Monitor & Underwriting Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-base: #0b0d19;
+            --bg-surface: rgba(20, 24, 46, 0.6);
+            --border-glow: rgba(99, 102, 241, 0.15);
+            --border-highlight: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --accent-green: #10b981;
+            --accent-green-glow: rgba(16, 185, 129, 0.2);
+            --accent-purple: #a855f7;
+            --accent-yellow: #f59e0b;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+            padding: 2rem;
+        }
+
+        /* Glassmorphic Container */
+        .glass-card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-highlight);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .logo-section h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-section p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--accent-green);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-green);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-green);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.6; }
+        }
+
+        .refresh-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        /* Metric Grid */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-glow);
+        }
+
+        .metric-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+            background: linear-gradient(to right, #ffffff, #d1d5db);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Tabs System */
+        .tabs-header {
+            display: flex;
+            border-bottom: 1px solid var(--border-highlight);
+            padding: 0 1rem;
+            gap: 1rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 1rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .tabs-content {
+            padding: 2rem;
+            min-height: 400px;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* ELT Phase explanation Cards */
+        .elt-banner {
+            padding: 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .elt-banner.extract {
+            background: rgba(168, 85, 247, 0.08);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+        }
+        .elt-banner.extract .phase-lbl {
+            background: var(--accent-purple);
+            color: white;
+        }
+
+        .elt-banner.load {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        .elt-banner.load .phase-lbl {
+            background: var(--accent-yellow);
+            color: black;
+        }
+
+        .elt-banner.transform {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .elt-banner.transform .phase-lbl {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .phase-lbl {
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .phase-desc h4 {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Lists & Tables */
+        .data-table-container {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-highlight);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-highlight);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-highlight);
+            color: var(--text-main);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Charts Layout */
+        .charts-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .chart-box {
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--border-highlight);
+        }
+
+        .chart-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* Badges */
+        .grade-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+        .grade-A { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+        .grade-B { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+        .grade-C { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        .grade-D { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .grade-E { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+        .grade-F { background: rgba(236, 72, 153, 0.15); color: #ec4899; }
+        .grade-G { background: rgba(107, 114, 128, 0.15); color: #9ca3af; }
+
+        .status-badge-inline {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+        .status-paid { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); }
+        .status-default { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .status-current { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    </style>
+</head>
+<body>
+
+    <header class="glass-card">
+        <div class="logo-section">
+            <h1>CREDIT RISK PIPELINE CONSOLE</h1>
+            <p>ELT (Extract, Load, Transform) Architecture Dashboard</p>
+        </div>
+        <div class="controls">
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                <span>MONITOR LIVE</span>
+            </div>
+            <label class="refresh-toggle">
+                <input type="checkbox" id="autoRefresh" checked>
+                <span>Live Refresh (3s)</span>
+            </label>
+        </div>
+    </header>
+
+    <div class="metric-grid">
+        <div class="metric-card glass-card">
+            <div class="metric-title">Extract (Landing Queue)</div>
+            <div class="metric-value" id="valLanding">0</div>
+        </div>
+        <div class="metric-card glass-card">
+            <div class="metric-title">Load (Staged Batches)</div>
+            <div class="metric-value" id="valArchive">0</div>
+        </div>
+        <div class="metric-card glass-card">
+            <div class="metric-title">Transform (Fact Rows)</div>
+            <div class="metric-value" id="valFact">0</div>
+        </div>
+        <div class="metric-card glass-card">
+            <div class="metric-title">Transform (Dim Borrowers)</div>
+            <div class="metric-value" id="valDim">0</div>
+        </div>
+    </div>
+
+    <main class="glass-card">
+        <div class="tabs-header">
+            <button class="tab-btn active" onclick="switchTab(event, 'landingTab')">1. EXTRACT (Landed Files)</button>
+            <button class="tab-btn" onclick="switchTab(event, 'stagingTab')">2. LOAD (Staging Table)</button>
+            <button class="tab-btn" onclick="switchTab(event, 'analyticsTab')">3. TRANSFORM (Warehouse & Analytics)</button>
+        </div>
+
+        <div class="tabs-content">
+            <!-- Extract Tab -->
+            <div id="landingTab" class="tab-panel active">
+                <div class="elt-banner extract">
+                    <span class="phase-lbl">Extract</span>
+                    <div class="phase-desc">
+                        <h4>Extraction Stage (Landing Zone)</h4>
+                        <p>Raw application records are extracted from source systems and written to <code>data/landing/</code>. This represents raw, dirty files before schema checks, deduplication, or anomaly corrections. They contain duplicates, null rates, usurious outlier rates, and logical formatting errors.</p>
+                    </div>
+                </div>
+                <div class="data-table-container">
+                    <table id="tableLanding">
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>File Size (KB)</th>
+                                <th>Timestamp Detected</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="3" class="no-data">Scanning landing folder...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Load Tab -->
+            <div id="stagingTab" class="tab-panel">
+                <div class="elt-banner load">
+                    <span class="phase-lbl">Load</span>
+                    <div class="phase-desc">
+                        <h4>Loading Stage (Raw Staging)</h4>
+                        <p>Raw data is consolidated and loaded into the database staging table (<code>data/raw/staging_raw_loans.csv</code>) without alteration. We load first to preserve a complete historical record of what was received, ensuring durability. Data shown below is uncleaned and contains anomalies.</p>
+                    </div>
+                </div>
+                <div class="data-table-container">
+                    <table id="tableStaging">
+                        <thead>
+                            <tr>
+                                <th>Loan ID</th>
+                                <th>Member ID</th>
+                                <th>Amount</th>
+                                <th>Interest Rate</th>
+                                <th>Grade</th>
+                                <th>Purpose</th>
+                                <th>DTI</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="8" class="no-data">Staging file is currently empty or loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Transform Tab -->
+            <div id="analyticsTab" class="tab-panel">
+                <div class="elt-banner transform">
+                    <span class="phase-lbl">Transform</span>
+                    <div class="phase-desc">
+                        <h4>Transformation Stage (Warehouse & Analytics View)</h4>
+                        <p>Data transformations execute inside the database. Running cleaning tasks (deduplicates, maps invalid Grade 'X' ratings, imputes missing interest rates by grade median) and splits them into Fact and Dimension tables (Star Schema). Finally, risk aggregates are computed to build the reports shown below.</p>
+                    </div>
+                </div>
+                <div class="charts-row">
+                    <div class="chart-box">
+                        <div class="chart-title">📊 Historical Credit Default Rates (%) by Grade</div>
+                        <div class="chart-container">
+                            <canvas id="chartDefaultRate"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box">
+                        <div class="chart-title">💰 Capital Allocation ($) by Grade</div>
+                        <div class="chart-container">
+                            <canvas id="chartCapital"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let chartDefault = null;
+        let chartCap = null;
+
+        function switchTab(evt, tabId) {
+            const panels = document.querySelectorAll('.tab-panel');
+            const btns = document.querySelectorAll('.tab-btn');
+            
+            panels.forEach(panel => panel.classList.remove('active'));
+            btns.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+
+        async function fetchAPI(endpoint) {
+            try {
+                const res = await fetch(`http://localhost:8085/api/${endpoint}`);
+                if (!res.ok) throw new Error("API call failed");
+                return await res.json();
+            } catch (err) {
+                console.error(`Error loading API /api/${endpoint}:`, err);
+                return null;
+            }
+        }
+
+        async function updateDashboard() {
+            // Stats
+            const stats = await fetchAPI('warehouse');
+            if (stats) {
+                document.getElementById('valArchive').textContent = stats.archived_batches_count;
+                document.getElementById('valFact').textContent = stats.fact_loans_count.toLocaleString();
+                document.getElementById('valDim').textContent = stats.dim_borrowers_count.toLocaleString();
+            }
+
+            // Landing Queue (Extract)
+            const landing = await fetchAPI('landing');
+            if (landing) {
+                document.getElementById('valLanding').textContent = landing.length;
+                const tbody = document.querySelector('#tableLanding tbody');
+                if (landing.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="no-data">Landing Zone Empty. Waiting for background generator...</td></tr>`;
+                } else {
+                    tbody.innerHTML = landing.map(f => `
+                        <tr>
+                            <td>📁 ${f.name}</td>
+                            <td>${f.size_kb} KB</td>
+                            <td>${f.modified}</td>
+                        </tr>
+                    `).join('');
+                }
+            }
+
+            // Staging Preview (Load)
+            const staging = await fetchAPI('staging');
+            if (staging && staging.data) {
+                const tbody = document.querySelector('#tableStaging tbody');
+                if (staging.data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" class="no-data">No raw staging data. Run the Airflow DAG to ingest landed files!</td></tr>`;
+                } else {
+                    tbody.innerHTML = staging.data.map(row => {
+                        const amount = parseFloat(row.loan_amount || 0);
+                        const rate = parseFloat(row.interest_rate || 0);
+                        const grade = row.grade || 'N/A';
+                        const status = row.loan_status || 'Unknown';
+                        
+                        let statusClass = 'status-current';
+                        if (status === 'Fully Paid') statusClass = 'status-paid';
+                        if (status === 'Charged Off' || status === 'Late') statusClass = 'status-default';
+
+                        return `
+                            <tr>
+                                <td>#${row.loan_id}</td>
+                                <td>${row.member_id}</td>
+                                <td>$${amount.toLocaleString()}</td>
+                                <td>${rate}%</td>
+                                <td><span class="grade-badge grade-${grade}">${grade}</span></td>
+                                <td>${row.purpose}</td>
+                                <td>${row.dti}%</td>
+                                <td><span class="status-badge-inline ${statusClass}">${status}</span></td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // Analytics (Transform)
+            const analytics = await fetchAPI('analytics');
+            if (analytics) {
+                updateCharts(analytics);
+            }
+        }
+
+        function updateCharts(data) {
+            const riskData = data.risk_metrics || [];
+            const summaryData = data.loan_summary || [];
+
+            riskData.sort((a, b) => a.grade.localeCompare(b.grade));
+
+            const capitalMap = {};
+            summaryData.forEach(row => {
+                const g = row.grade;
+                const cap = parseFloat(row.total_capital_issued || 0);
+                capitalMap[g] = (capitalMap[g] || 0) + cap;
+            });
+            const gradesCap = Object.keys(capitalMap).sort();
+            const valuesCap = gradesCap.map(g => capitalMap[g]);
+
+            const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#ec4899', '#9ca3af'];
+
+            const defaultLabels = riskData.map(d => `Grade ${d.grade}`);
+            const defaultValues = riskData.map(d => parseFloat(d.default_rate_pct || 0));
+
+            if (!chartDefault) {
+                const ctx = document.getElementById('chartDefaultRate').getContext('2d');
+                chartDefault = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: defaultLabels,
+                        datasets: [{
+                            label: 'Default Rate (%)',
+                            data: defaultValues,
+                            backgroundColor: 'rgba(99, 102, 241, 0.4)',
+                            borderColor: '#6366f1',
+                            borderWidth: 2,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#9ca3af' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#9ca3af' }
+                            }
+                        }
+                    }
+                });
+            } else {
+                chartDefault.data.labels = defaultLabels;
+                chartDefault.data.datasets[0].data = defaultValues;
+                chartDefault.update();
+            }
+
+            if (!chartCap) {
+                const ctx = document.getElementById('chartCapital').getContext('2d');
+                chartCap = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: gradesCap.map(g => `Grade ${g}`),
+                        datasets: [{
+                            data: valuesCap,
+                            backgroundColor: colors.slice(0, gradesCap.length),
+                            borderWidth: 1,
+                            borderColor: 'rgba(11, 13, 25, 0.8)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { color: '#9ca3af', font: { size: 10 } }
+                            }
+                        }
+                    }
+                });
+            } else {
+                chartCap.data.labels = gradesCap.map(g => `Grade ${g}`);
+                chartCap.data.datasets[0].data = valuesCap;
+                chartCap.update();
+            }
+        }
+
+        let pollInterval = null;
+        function setupPolling() {
+            const toggle = document.getElementById('autoRefresh');
+            if (toggle.checked) {
+                pollInterval = setInterval(updateDashboard, 3000);
+            }
+            
+            toggle.addEventListener('change', () => {
+                if (toggle.checked) {
+                    pollInterval = setInterval(updateDashboard, 3000);
+                    updateDashboard();
+                } else {
+                    clearInterval(pollInterval);
+                }
+            });
+        }
+
+        updateDashboard();
+        setupPolling();
+    </script>
+</body>
+</html>

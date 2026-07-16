@@ -66,7 +66,7 @@ class BigQueryLoader:
                 logger.error(f"Failed to create BigQuery dataset '{dataset_id}': {e}")
                 return False
 
-    def load_dataframe(self, df: pd.DataFrame, table_name: str = "raw_loans") -> bool:
+    def load_dataframe(self, df: pd.DataFrame, table_name: str = "raw_loans", write_disposition: str = "WRITE_APPEND") -> bool:
         """
         Loads a Pandas DataFrame into BigQuery table with partitioning and clustering.
         """
@@ -85,16 +85,15 @@ class BigQueryLoader:
             logger.info(f"[DRY-RUN] Row Count: {len(df)} rows.")
             logger.info("[DRY-RUN] Partitioning configuration: TimePartitioning(field='issue_date', type='DAY')")
             logger.info("[DRY-RUN] Clustering configuration: Clustering(fields=['grade', 'purpose'])")
-            logger.info("[DRY-RUN] Write Disposition: WRITE_TRUNCATE (Overwrites existing data)")
+            logger.info(f"[DRY-RUN] Write Disposition: {write_disposition}")
             logger.info("[DRY-RUN] Load execution simulation successful.")
             return True
             
         try:
             # Configure the load job parameters
             job_config = bigquery.LoadJobConfig(
-                # WRITE_TRUNCATE replaces the table contents if it exists.
-                # Alternative is WRITE_APPEND (inserts new rows) or WRITE_EMPTY (fails if data exists).
-                write_disposition="WRITE_TRUNCATE",
+                # Use parameter write_disposition (WRITE_APPEND or WRITE_TRUNCATE)
+                write_disposition=write_disposition,
                 
                 # Setup Time Partitioning by our standardized issue_date column (DATE/TIMESTAMP)
                 time_partitioning=bigquery.TimePartitioning(

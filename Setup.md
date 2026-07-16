@@ -63,23 +63,70 @@ PYTHONPATH=. python src/transformation.py
 
 ---
 
-## 5. Dockerized Execution (Airflow + Postgres)
+## 5. Running the Live Continuous Simulation
 
-We use Docker Compose to spin up a fully integrated Airflow orchestrator (LocalExecutor) backed by a PostgreSQL metadata database.
+We have created a live orchestrator script that generates timestamped files in the landing zone and processes them sequentially in a continuous loop:
 
 ```bash
-# 1. Build the local Airflow image and initialize Postgres
-docker-compose up airflow-init
+# Run the live simulation script (executes 3 cycles of live streaming and exits)
+PYTHONPATH=. python scripts/run_live_pipeline.py
+```
+During the run, check the `data/landing/` directory to watch new batch files appear, and check `data/archive/` to see processed files move automatically!
 
-# 2. Spin up the scheduler, webserver, and database in the background
-docker-compose up -d
+---
 
-# 3. Open your browser and navigate to the Airflow UI:
-# URL: http://localhost:8080
-# Username: admin
-# Password: admin
+## 6. Dockerized Execution (One-Command Full Deployment)
 
-# 4. To stop the containers when finished:
+We have containerized all services so they run together. The `data-generator` runs as a background daemon container, continuously outputting live CSVs. The Airflow scheduler triggers the ingestion pipeline automatically every 2 minutes.
+
+To build and launch the entire platform in a single command, run:
+
+```bash
+# 1. Initialize metadata database schemas, create admin profile, and spin up all containers (webserver, scheduler, database, and generator) in the background
+docker-compose up --build -d
+```
+
+### Checking Active Services:
+You can check which containers are running with:
+```bash
+docker-compose ps
+```
+You will see 4 active services:
+*   `postgres`: Metadata database.
+*   `airflow-webserver`: The UI console at [http://localhost:8080](http://localhost:8080). (Credentials: **admin / admin**)
+*   `airflow-scheduler`: Auto-triggers our `loan_risk_pipeline` DAG every 2 minutes.
+*   `data-generator`: Simulates real-time application records landing in `./data/landing/` in the host workspace.
+
+### Monitoring In Action:
+1. Log into [http://localhost:8080](http://localhost:8080).
+2. Toggle the `loan_risk_pipeline` DAG to **Active** (Unpaused).
+3. Airflow will immediately schedule the first execution and continue triggering runs every 2 minutes as long as the scheduler runs!
+4. Watch files land in `data/landing/` and move to `data/archive/` automatically!
+
+### Shutdown:
+To stop and clean up the database container, volumes, and application daemons, run:
+```bash
 docker-compose down
 ```
-When Airflow is active, toggle the `loan_risk_pipeline` DAG to "Active" and click "Trigger DAG" to execute the pipeline!
+
+---
+
+## 7. Pipeline Monitoring Web Dashboard
+
+We built a custom, glassmorphic pipeline monitoring console that reads local database and staging metrics directly and renders charts in real time.
+
+### To start the dashboard server:
+```bash
+# Start the zero-dependency Python API server
+python3 dashboard/server.py
+```
+
+### To view the dashboard:
+1. Open your browser and navigate to: [http://localhost:8085](http://localhost:8085).
+2. The UI will display:
+   * **Landing Queue**: lists incoming raw CSV files in real time.
+   * **Staging Inspector**: shows a preview of raw applications ingested.
+   * **Risk Analytics Room**: renders live charts showing vintage defaults (%) and capital distribution per rating grade.
+3. Toggle "Live Refresh (3s)" to watch new data update automatically as Airflow runs in the background!
+
+

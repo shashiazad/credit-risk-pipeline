@@ -21,6 +21,7 @@ RUN pip install --no-cache-dir --user -r /opt/airflow/requirements.txt
 COPY --chown=airflow:root src/ /opt/airflow/src/
 COPY --chown=airflow:root dags/ /opt/airflow/dags/
 COPY --chown=airflow:root config/ /opt/airflow/config/
+COPY --chown=airflow:root scripts/ /opt/airflow/scripts/
 
 # Set Python Path to find our src modules
 ENV PYTHONPATH="/opt/airflow:${PYTHONPATH}"
