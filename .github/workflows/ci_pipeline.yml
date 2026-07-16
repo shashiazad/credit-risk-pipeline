@@ -13,13 +13,13 @@ jobs:
     steps:
     # 1. Checkout the source code from GitHub repository
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     # 2. Install Python 3.9
     - name: Set up Python 3.9
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-python-version: '3.9'
+        python-version: '3.9'
         cache: 'pip' # cache pip dependencies to speed up future runs
 
     # 3. Create mock directories needed by the pipeline
