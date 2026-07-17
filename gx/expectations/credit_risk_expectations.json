@@ -1,0 +1,75 @@
+{
+  "expectations": [
+    {
+      "id": "5de07ed8-caee-43a6-831e-148161c7f5e0",
+      "kwargs": {
+        "column": "loan_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "fe1084be-94db-45fb-a13a-e61cd65b5289",
+      "kwargs": {
+        "column": "loan_amount"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "c607f62c-9f1c-489b-a317-3e41d74191e0",
+      "kwargs": {
+        "column": "interest_rate",
+        "max_value": 35.0,
+        "min_value": 5.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "88514bc8-4189-46ad-a8d5-f9eab6d65f34",
+      "kwargs": {
+        "column": "loan_status",
+        "value_set": [
+          "Fully Paid",
+          "Charged Off",
+          "Current",
+          "Late"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "feef0a5d-cb74-432c-b0ac-d78cc9e1082c",
+      "kwargs": {
+        "column": "dti",
+        "max_value": 100.0,
+        "min_value": 0.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "c3fd7167-b087-4225-833c-0a7c6839b1f1",
+      "kwargs": {
+        "column": "issue_date",
+        "strftime_format": "%Y-%m-%d"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_match_strftime_format"
+    }
+  ],
+  "id": "fc0ece44-775e-4e50-b85a-745e89397a2c",
+  "meta": {
+    "great_expectations_version": "1.8.1"
+  },
+  "name": "credit_risk_expectations",
+  "notes": null
+}

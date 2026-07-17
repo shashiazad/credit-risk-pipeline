@@ -1,0 +1,39 @@
+{
+  "expectations": [
+    {
+      "id": "b8e6010c-d5fd-4b0b-8209-d5ddab15a84f",
+      "kwargs": {
+        "column": "loan_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "f12833ba-063b-435b-a9b9-1dde6b22e643",
+      "kwargs": {
+        "column": "loan_amount"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "7b1b4722-7568-45f4-914f-d1acb65555b5",
+      "kwargs": {
+        "column": "interest_rate",
+        "max_value": 35.0,
+        "min_value": 5.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    }
+  ],
+  "id": "e23ae53a-3ac0-4939-aa70-9a06b51e89f3",
+  "meta": {
+    "great_expectations_version": "1.8.1"
+  },
+  "name": "my_suite",
+  "notes": null
+}

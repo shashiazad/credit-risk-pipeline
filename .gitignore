@@ -19,6 +19,7 @@ __pycache__/
 .env
 *.json
 !credentials.json.example
+!gx/expectations/*.json
 
 # Local Data files (do not commit large CSVs or validated datasets)
 data/
